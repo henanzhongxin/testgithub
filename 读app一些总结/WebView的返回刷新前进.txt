@@ -1,0 +1,28 @@
+mWebView.goBack();   //后退  
+mWebView.goForward();//前进
+
+mWebView.reload();  //刷新
+
+
+
+
+
+[java] view plaincopyprint?
+01.//点击后退按钮,让WebView后退一页(也可以覆写Activity的onKeyDown方法)    
+02.        webview.setOnKeyListener(new View.OnKeyListener() {    
+03.            @Override    
+04.            public boolean onKey(View v, int keyCode, KeyEvent event) {    
+05.                if (event.getAction() == KeyEvent.ACTION_DOWN) {    
+06.                    if (keyCode == KeyEvent.KEYCODE_BACK && webview.canGoBack()) {  //表示按返回键  
+07.  
+08.时的操作  
+09.                        webview.goBack();   //后退    
+10.  
+11.                        //webview.goForward();//前进  
+12.                        return true;    //已处理    
+13.                    }    
+14.                }    
+15.                return false;    
+16.            }    
+17.        });  
+

@@ -1,0 +1,5 @@
+这个方法是转变为标准尺寸的一个函数，例如
+
+int size = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20, context.getResources().getDisplayMetrics());
+
+这里COMPLEX_UNIT_SP是单位，20是数值，也就是20sp。

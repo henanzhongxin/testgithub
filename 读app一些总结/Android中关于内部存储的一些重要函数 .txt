@@ -1,0 +1,233 @@
+
+一、简介
+Android中，你也可以通过绝对路径以JAVA传统方式访问内部存储空间。但是以这种方式创建的文件是对私有，创建它的应用程序对该文件是可读可写，但是别的应用程序并不能直接访问它。不是所有的内部存储空间应用程序都可以访问，默认情况下只能访问“/data/data/你的应用程序的包名”这个路径下的文件。
+Android中，你还可以使用Context对象的openFileOutput()和openFileInput()来进行数据持久化存储的这种方式，你的数据文件将存储在内部存储空间的/data/data/你的应用程序的包名/files/目录下，无法指定更深一级的目录，而且默认是Context.MODE_PRIVATE模式，即别的应用程序不能访问它。你可以使用openFileOutput()的int mode参数来让别的应用程序也能访问你的文件。
+注意：保存在/data/data/你的应用程序的包名目录中文件，会在卸载你的应用程序时被删除掉。
+ 二、Context中关于内部存储的重要函数 
+public abstract File getCacheDir ()
+Since: API Level 1
+
+Returns the absolute path to the application specific cache directory on the filesystem. These files will be ones that get deleted first when the device runs low on storage. There is no guarantee when these files will be deleted. Note: you should not rely on the system deleting these files for you; you should always have a reasonable maximum, such as 1 MB, for the amount of space you consume with cache files, and prune those files when exceeding that space.
+该目录主要用于存放缓存文件，当系统的内存存储空间紧张时，该目录下的文件会被删除掉。关于这些文件究竟会在存储空间剩余多少的情况，没有严格的标准保障。
+注意：你不应该依赖系统来清理这些缓存文件，你应该对这些缓存文件占用的最大存储空间设定个最大值，比如是1M，当实际占用空间超过这个值时，你应该对这些缓存文件做相应的清理工作（prune）。
+Returns
+
+    Returns the path of the directory holding application cache files.
+
+See Also
+
+    openFileOutput(String, int)
+    getFileStreamPath(String)
+    getDir(String, int)
+    示例1
+
+    import android.app.Activity;
+    import android.content.Context;
+    import android.os.Bundle;
+    import android.util.Log;
+
+    public class MainActivity extends Activity {
+     final static String TAG="robin";
+        /** Called when the activity is first created. */
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.main);
+            Context context=this;
+            String path=context.getCacheDir().getAbsolutePath();
+            Log.i(TAG,"path:"+path);
+        }
+    }
+
+    运行结果
+    10-01 14:57:52.296: I/robin(7835): path:/data/data/com.lenovo/cache
+
+public abstract File getDir (String name, int mode)
+Since: API Level 1
+
+Retrieve, creating if needed, a new directory in which the application can place its own custom data files. You can use the returned File object to create and access files in this directory. Note that files created through a File object will only be accessible by your own application; you can only set the mode of the entire directory, not of individual files.
+该函数主要用于得到一个文件夹的句柄，并通过该句柄创建和访问外文件夹。
+注意：参数int mode是指文件夹的访问权限而并不包括其子文件夹和文件的访问权限
+Parameters
+name 	Name of the directory to retrieve. This is a directory that is created as part of your application data.
+mode 	Operating mode. Use 0 or MODE_PRIVATE for the default operation, MODE_WORLD_READABLE and MODE_WORLD_WRITEABLE to control permissions.
+Returns
+
+    Returns a File object for the requested directory. The directory will have been created if it does not already exist.
+
+See Also
+
+    openFileOutput(String, int)
+    示例2
+
+            File file=context.getDir("download", Context.MODE_PRIVATE);
+            String path=file.getAbsolutePath();
+            Log.i(TAG,"path:"+path);
+
+    运行结果
+    10-02 08:56:49.278: I/robin(12055): path:/data/data/com.lenovo/app_download
+
+public abstract File getFileStreamPath (String name)
+Since: API Level 1
+
+Returns the absolute path on the filesystem where a file created with openFileOutput(String, int) is stored.
+Parameters
+name 	The name of the file for which you would like to get its path.
+Returns
+
+    Returns an absolute path to the given file.
+
+See Also
+
+    openFileOutput(String, int)
+    getFilesDir()
+    getDir(String, int)
+    示例3
+
+            File file=context.getFileStreamPath("download");
+            String path=file.getAbsolutePath();
+            Log.i(TAG,"path:"+path);
+
+    运行结果
+    10-02 09:17:55.913: I/robin(12507): path:/data/data/com.lenovo/files/download
+
+public abstract File getFilesDir ()
+Since: API Level 1
+
+Returns the absolute path to the directory on the filesystem where files created with openFileOutput(String, int) are stored.
+Returns
+
+    Returns the path of the directory holding application files.
+
+See Also
+
+    openFileOutput(String, int)
+    getFileStreamPath(String)
+    getDir(String, int)
+
+示例4
+
+        File file=context.getFilesDir();
+        String path=file.getAbsolutePath();
+        Log.i(TAG,"path:"+path);
+
+运行结果
+10-02 09:15:11.102: I/robin(12359): path:/data/data/com.lenovo/files
+public abstract FileInputStream openFileInput (String name)
+Since: API Level 1
+
+Open a private file associated with this Context's application package for reading.
+Parameters
+name 	The name of the file to open; can not contain path separators.
+Returns
+
+    FileInputStream Resulting input stream.
+
+Throws
+FileNotFoundException 	 
+See Also
+
+    openFileOutput(String, int)
+    fileList()
+    deleteFile(String)
+    FileInputStream(String)
+
+public abstract FileOutputStream openFileOutput (String name, int mode)
+Since: API Level 1
+
+Open a private file associated with this Context's application package for writing. Creates the file if it doesn't already exist.
+Parameters
+name 	The name of the file to open; can not contain path separators.
+mode 	Operating mode. Use 0 or MODE_PRIVATE for the default operation, MODE_APPEND to append to an existing file, MODE_WORLD_READABLE and MODE_WORLD_WRITEABLE to control permissions.
+Returns
+
+    FileOutputStream Resulting output stream.
+
+Throws
+FileNotFoundException 	 
+See Also
+
+    MODE_APPEND 表示写文件时是追加模式，即从文件末开始写数据
+    MODE_PRIVATE
+    MODE_WORLD_READABLE
+    MODE_WORLD_WRITEABLE
+    openFileInput(String)
+    fileList()
+    deleteFile(String)
+    FileOutputStream(String)
+
+示例5
+
+String FILENAME = "hello_file";
+String string = "hello world!";
+FileOutputStream fos = openFileOutput(FILENAME, Context.MODE_WORLD_READABLE);
+fos.write(string.getBytes());
+fos.close();
+
+示例6
+
+String FILENAME = "hello_file";
+String string = "hello world!";
+FileOutputStream fos = openFileOutput(FILENAME, Context.MODE_WORLD_READABLE);
+fos.write(string.getBytes());
+fos.close();
+
+示例7
+
+String FILENAME = "hello_file";
+String string = "hello world!";
+FileOutputStream fos = openFileOutput(FILENAME, Context.MODE_APPEND|Context.MODE_WORLD_READABLE;
+fos.write(string.getBytes());
+fos.close();
+
+public abstract boolean deleteFile (String name)
+Since: API Level 1
+
+Delete the given private file associated with this Context's application package.
+Parameters
+name 	The name of the file to delete; can not contain path separators.
+Returns
+
+    True if the file was successfully deleted; else false.
+
+See Also
+
+    openFileInput(String)
+    openFileOutput(String, int)
+    fileList()
+    delete()
+
+public abstract String[] fileList ()
+Since: API Level 1
+
+Returns an array of strings naming the private files associated with this Context's application package.
+Returns
+
+    Array of strings naming the private files.
+
+See Also
+
+    openFileInput(String)
+    openFileOutput(String, int)
+    deleteFile(String)
+
+三、Environment中关于内存部存储的重要函数
+public static File getDataDirectory ()
+Since: API Level 1
+
+Gets the Android data directory.
+
+用File返回数据文件的根目录，返回的文件的路径为“/data”。该目录下的文件是只读。应用程序无法对该目录下的文件进行写操作。
+public static File getDownloadCacheDirectory ()
+Since: API Level 1
+
+Gets the Android Download/Cache content directory.
+
+用File返回缓存文件的根目录，返回的文件的路径为“/cache”。对于第三方应用程序。该目录下的文件是只读。第三方应用程序无法对该目录下的文件进行写操作。
+public static File getRootDirectory ()
+Since: API Level 1
+
+Gets the Android root directory.
+
+用File返回Android系统文件的根目录，返回的文件的路径为“/system”。该目录下的文件是只读。应用程序无法对该目录下的文件进行写操作。
+结束

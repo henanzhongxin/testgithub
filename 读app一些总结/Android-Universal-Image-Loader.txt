@@ -1,0 +1,225 @@
+一个好的类库的重要特征就是可配置性强。我们先简单使用Android-Universal-Image-Loader，一般情况下使用默认配置就可以了。
+
+下面的实例利用Android-Universal-Image-Loader将网络图片加载到图片墙中。
+
+
+复制代码
+ 1 public class BaseActivity extends Activity {
+ 2     ImageLoader imageLoader;
+ 3     @Override
+ 4     protected void onCreate(Bundle savedInstanceState) {
+ 5           // Create global configuration and initialize ImageLoader with this configuration
+ 6         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
+ 7             .build();
+ 8         ImageLoader.getInstance().init(config);
+ 9         super.onCreate(savedInstanceState);
+10     }
+11 }  
+
+复制代码
+
+
+复制代码
+  1 public class MainActivity extends BaseActivity {
+  2 
+  3     @Override
+  4     protected void onCreate(Bundle savedInstanceState) {
+  5         super.onCreate(savedInstanceState);
+  6         setContentView(R.layout.activity_main);
+  7   
+  8         ImageLoader imageLoader = ImageLoader.getInstance();
+  9 
+ 10         GridView gridView = (GridView) this.findViewById(R.id.grdvImageWall);
+ 11         gridView.setAdapter(new PhotoWallAdapter(Constants.IMAGES));
+ 12     }
+ 13 
+ 14     static class ViewHolder {
+ 15         ImageView imageView;
+ 16         ProgressBar progressBar;
+ 17     }
+ 18 
+ 19     public class PhotoWallAdapter extends BaseAdapter {
+ 20         String[] imageUrls;
+ 21         ImageLoader imageLoad;
+ 22         DisplayImageOptions options;
+ 23         LinearLayout gridViewItem;
+ 24 
+ 25         public PhotoWallAdapter(String[] imageUrls) {
+ 26             assert imageUrls != null;
+ 27             this.imageUrls = imageUrls;
+ 28 
+ 29             options = new DisplayImageOptions.Builder()
+ 30                     .showImageOnLoading(R.drawable.ic_stub) // resource or
+ 31                                                             // drawable
+ 32                     .showImageForEmptyUri(R.drawable.ic_empty) // resource or
+ 33                                                                 // drawable
+ 34                     .showImageOnFail(R.drawable.ic_error) // resource or
+ 35                                                             // drawable
+ 36                     .resetViewBeforeLoading(false) // default
+ 37                     .delayBeforeLoading(1000).cacheInMemory(false) // default
+ 38                     .cacheOnDisk(false) // default
+ 39                     .considerExifParams(false) // default
+ 40                     .imageScaleType(ImageScaleType.IN_SAMPLE_POWER_OF_2) // default
+ 41                     .bitmapConfig(Bitmap.Config.ARGB_8888) // default
+ 42                     .displayer(new SimpleBitmapDisplayer()) // default
+ 43                     .handler(new Handler()) // default
+ 44                     .build();
+ 45             this.imageLoad = ImageLoader.getInstance();
+ 46 
+ 47         }
+ 48 
+ 49         @Override
+ 50         public int getCount() {
+ 51             return this.imageUrls.length;
+ 52         }
+ 53 
+ 54         @Override
+ 55         public Object getItem(int position) {
+ 56             if (position <= 0 || position >= this.imageUrls.length) {
+ 57                 throw new IllegalArgumentException(
+ 58                         "position<=0||position>=this.imageUrls.length");
+ 59             }
+ 60             return this.imageUrls[position];
+ 61         }
+ 62 
+ 63         @Override
+ 64         public long getItemId(int position) {
+ 65             return position;
+ 66         }
+ 67 
+ 68         @Override
+ 69         public View getView(int position, View convertView, ViewGroup parent) {
+ 70             // 判断这个image是否已经在缓存当中，如果没有就下载
+ 71             final ViewHolder holder;
+ 72             if (convertView == null) {
+ 73                 holder = new ViewHolder();
+ 74                 gridViewItem = (LinearLayout) getLayoutInflater().inflate(
+ 75                         R.layout.image_wall_item, null);
+ 76                 holder.imageView = (ImageView) gridViewItem
+ 77                         .findViewById(R.id.item_image);
+ 78                 holder.progressBar = (ProgressBar) gridViewItem
+ 79                         .findViewById(R.id.item_process);
+ 80                 gridViewItem.setTag(holder);
+ 81                 convertView = gridViewItem;
+ 82             } else {
+ 83                 holder = (ViewHolder) gridViewItem.getTag();
+ 84             }
+ 85             this.imageLoad.displayImage(this.imageUrls[position],
+ 86                     holder.imageView, options,
+ 87                     new SimpleImageLoadingListener() {
+ 88 
+ 89                         @Override
+ 90                         public void onLoadingStarted(String imageUri, View view) {
+ 91                             holder.progressBar.setProgress(0);
+ 92                             holder.progressBar.setVisibility(View.VISIBLE);
+ 93                         }
+ 94 
+ 95                         @Override
+ 96                         public void onLoadingFailed(String imageUri, View view,
+ 97                                 FailReason failReason) {
+ 98                             holder.progressBar.setVisibility(View.GONE);
+ 99                         }
+100 
+101                         @Override
+102                         public void onLoadingComplete(String imageUri,
+103                                 View view, Bitmap loadedImage) {
+104                             holder.progressBar.setVisibility(View.GONE);
+105                         }
+106 
+107                     }, new ImageLoadingProgressListener() {
+108 
+109                         @Override
+110                         public void onProgressUpdate(String imageUri,
+111                                 View view, int current, int total) {
+112                             holder.progressBar.setProgress(Math.round(100.0f
+113                                     * current / total));
+114                         }
+115                     }); // 通过URL判断图片是否已经下载
+116             return convertView;
+117         }
+118 
+119     }
+120 }
+
+复制代码
+
+里面主要的对象都用        突出显示了。
+
+三者的关系
+
+ImageLoaderConfiguration是针对图片缓存的全局配置，主要有线程类、缓存大小、磁盘大小、图片下载与解析、日志方面的配置。
+
+ImageLoader是具体下载图片，缓存图片，显示图片的具体执行类，它有两个具体的方法displayImage(...)、loadImage(...)，但是其实最终他们的实现都是displayImage(...)。
+
+DisplayImageOptions用于指导每一个Imageloader根据网络图片的状态（空白、下载错误、正在下载）显示对应的图片，是否将缓存加载到磁盘上，下载完后对图片进行怎么样的处理。
+
+从三者的协作关系上看，他们有点像厨房规定、厨师、客户个人口味之间的关系。ImageLoaderConfiguration就像是厨房里面的规定，每一个厨师要怎么着装，要怎么保持厨房的干净，这是针对每一个厨师都适用的规定，而且不允许个性化改变。ImageLoader就像是具体做菜的厨师，负责具体菜谱的制作。DisplayImageOptions就像每个客户的偏好，根据客户是重口味还是清淡，每一个imageLoader根据DisplayImageOptions的要求具体执行。
+
+ 
+
+ImageLoaderConfiguration
+
+在上面的示例代码中，我们使用ImageLoaderConfiguration的默认配置，下面给出ImageLoaderConfiguration比较详尽的配置，从下面的配置中，可以看出ImageLoaderConfiguration的配置主要是全局性的配置，主要有线程类、缓存大小、磁盘大小、图片下载与解析、日志方面的配置。
+
+
+复制代码
+ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context)
+        .memoryCacheExtraOptions(480, 800) // default = device screen dimensions
+        .diskCacheExtraOptions(480, 800, null)
+        .taskExecutor(...)
+        .taskExecutorForCachedImages(...)
+        .threadPoolSize(3) // default
+        .threadPriority(Thread.NORM_PRIORITY - 1) // default
+        .tasksProcessingOrder(QueueProcessingType.FIFO) // default
+        .denyCacheImageMultipleSizesInMemory()
+        .memoryCache(new LruMemoryCache(2 * 1024 * 1024))
+        .memoryCacheSize(2 * 1024 * 1024)
+        .memoryCacheSizePercentage(13) // default
+        .diskCache(new UnlimitedDiscCache(cacheDir)) // default
+        .diskCacheSize(50 * 1024 * 1024)
+        .diskCacheFileCount(100)
+        .diskCacheFileNameGenerator(new HashCodeFileNameGenerator()) // default
+        .imageDownloader(new BaseImageDownloader(context)) // default
+        .imageDecoder(new BaseImageDecoder()) // default
+        .defaultDisplayImageOptions(DisplayImageOptions.createSimple()) // default
+        .writeDebugLogs()
+        .build();
+
+复制代码
+
+ImageLoaderConfiguration的主要职责就是记录相关的配置，它的内部其实就是一些字段的集合（如下面的源代码）。它有一个builder的内部类，这个类中的字段跟ImageLoaderConfiguration中的字段完全一致，它有一些默认值，通过修改builder可以配置ImageLoaderConfiguration。
+
+ 
+
+View Code
+ 
+
+ Display Options
+
+每一个ImageLoader.displayImage(...)都可以使用Display Options。
+
+
+
+复制代码
+DisplayImageOptions options = new DisplayImageOptions.Builder()
+        .showImageOnLoading(R.drawable.ic_stub) // resource or drawable
+        .showImageForEmptyUri(R.drawable.ic_empty) // resource or drawable
+        .showImageOnFail(R.drawable.ic_error) // resource or drawable
+        .resetViewBeforeLoading(false)  // default
+        .delayBeforeLoading(1000)
+        .cacheInMemory(false) // default
+        .cacheOnDisk(false) // default
+        .preProcessor(...)
+        .postProcessor(...)
+        .extraForDownloader(...)
+        .considerExifParams(false) // default
+        .imageScaleType(ImageScaleType.IN_SAMPLE_POWER_OF_2) // default
+        .bitmapConfig(Bitmap.Config.ARGB_8888) // default
+        .decodingOptions(...)
+        .displayer(new SimpleBitmapDisplayer()) // default
+        .handler(new Handler()) // default
+        .build();
+
+复制代码
+
+ Display Options的主要职责就是记录相关的配置，它的内部其实就是一些字段的集合（如下面的源代码）。它有一个builder的内部类，这个类中的字段跟DisplayOption中的字段完全一致，它有一些默认值，通过修改builder可以配置DisplayOptions。

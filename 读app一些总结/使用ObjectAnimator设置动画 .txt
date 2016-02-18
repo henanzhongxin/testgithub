@@ -1,0 +1,14 @@
+ObjectAnimator是ValueAnimator的子类，他本身就已经包含了时间引擎和值计算，所以它拥有为对象的某个属性设置动画的功能。这使得为任何对象设置动画更加的容易。你不再需要实现 ValueAnimator.AnimatorUpdateListener接口，因为ObjectAnimator动画自己会自动更新相应的属性值。
+ObjectAnimator的实例和ValueAnimator是类似的，但是你需要描叙该对象，需要设置动画的属性的名字(一个字符串)，以及动画属性值的变化范围:
+ObjectAnimator anim = ObjectAnimator.ofFloat(foo, "alpha", 0f, 1f);
+ anim.setDuration(1000);
+ anim.start();
+为了使ObjectAnimator正确的更新属性值，你需要：
+1、你要设置动画的对象的属性必须有一个set该值的方法。因为ObjectAnimator在动画的过程中自动更新属性值，这是通过调用该属性的set方法来实现的。例如，如果属性的名字是foo，你需要有一个setFoo()的方法，如果不存在set方法，你可以有下面三个选择：
+1)、如果你有权限，你可以为该类添加一个set方法;
+2)、使用一个包裹类，通过该包裹类你可以去修改和获取属性值的变化，然后把它向前定向到原来的值
+3)、使用ValueAnimator类替换
+2、如果你在一个ObjectAnimator中只为属性值设置一个值，这个值被任务是动画的结束值。 这样的话，该对象必须有一个get方法来获取该属性值作为动画的起始值.get方法必须类似于get<属性名>.例如，如果属性的名字叫foo，你需要有一个getFoo()，方法。
+3、动画的属性值的gettter()方法(如果需要)和setter方法必须作用跟ObjectAnimator中的起始值是一个类型，例如如果你构造ObjectAnimator的方式是如下这样的，则该属性值的getter和setter方法必须如targetObject.setPropName(float) 和targetObject.getPropName(float)，即都是浮点型
+ObjectAnimator.ofFloat(targetObject, "propName", 1f)
+ 4、依赖于你设置动画的对象和属性，你可能需要调用View的invalidate来强制屏幕重现绘制以及更新动画值。你可以在 onAnimationUpdate()中做这个工作。例如，为一个Drawable对象的颜色属性设置动画，你仅仅需要在该对象重绘的时候更新屏幕。所有View属性的set方法，例如setAlpha()和setTranslationX()自己会调用invalid方法，所以当这些属性值有更新时，你不需要再次调用invalid方法。要获取更多关于监听器的信息。你可以查看监听器章节。 

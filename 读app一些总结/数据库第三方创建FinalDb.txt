@@ -1,0 +1,206 @@
+import org.apache.http.HttpEntity;
+
+import org.apache.http.HttpHost;
+
+import org.apache.http.HttpResponse;
+
+import org.apache.http.auth.AuthScope;
+
+import org.apache.http.auth.UsernamePasswordCredentials;
+
+import org.apache.http.client.methods.HttpGet;
+
+import org.apache.http.conn.params.ConnRoutePNames;
+
+import org.apache.http.params. HttpConnectionParams;
+
+import org.apache.http.client.params. HttpClientParams;
+
+try {
+
+// 创建 HttpParams 以用来设置 HTTP 参数（这一部分不是必需的）
+
+HttpParams params = new BasicHttpParams();
+
+// 设置连接超时和 Socket 超时，以及 Socket 缓存大小
+
+HttpConnectionParams.setConnectionTimeout(params, 20 * 1000);
+
+HttpConnectionParams.setSoTimeout(params, 20 * 1000);
+
+HttpConnectionParams.setSocketBufferSize(params, 8192);
+
+// 设置重定向，缺省为 true
+
+HttpClientParams.setRedirecting(params, true);
+
+// 设置 user agent
+
+HttpProtocolParams.setUserAgent(params, userAgent);
+
+// 创建一个 HttpClient 实例
+
+// 注意 HttpClient httpClient = new HttpClient(); 是Commons HttpClient
+
+// 中的用法，在 Android 1.5 中我们需要使用 Apache 的缺省实现 DefaultHttpClient
+
+HttpClient httpClient = new DefaultHttpClient(params);
+
+// 创建 HttpGet 方法，该方法会自动处理 URL 地址的重定向
+
+HttpGet httpGet = new HttpGet (“http://www.test_test.com/”);
+
+HttpResponse response = client.execute(httpGet);
+
+if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+
+// 错误处理，例如可以在该请求正常结束前将其中断
+
+httpGet.abort();
+
+}
+
+// 读取更多信息
+
+Header[] headers = response.getHeaders();
+
+HttpEntity entity = response.getEntity();
+
+Header header = response.getFirstHeader(“Content-Type”);
+
+} catch (Exception ee) {
+
+} finally {
+
+// 释放连接
+
+client.getConnectionManager().shutdown();
+
+}
+
+
+
+
+ 
+
+import org.apache.http.HttpEntity;
+
+import org.apache.http.HttpHost;
+
+import org.apache.http.HttpResponse;
+
+import org.apache.http.auth.AuthScope;
+
+import org.apache.http.auth.UsernamePasswordCredentials;
+
+import org.apache.http.client.methods.HttpGet;
+
+import org.apache.http.conn.params.ConnRoutePNames;
+
+import org.apache.http.params. HttpConnectionParams;
+
+import org.apache.http.client.params. HttpClientParams;
+
+try {
+
+// 创建 HttpParams 以用来设置 HTTP 参数（这一部分不是必需的）
+
+HttpParams params = new BasicHttpParams();
+
+// 设置连接超时和 Socket 超时，以及 Socket 缓存大小
+
+HttpConnectionParams.setConnectionTimeout(params, 20 * 1000);
+
+HttpConnectionParams.setSoTimeout(params, 20 * 1000);
+
+HttpConnectionParams.setSocketBufferSize(params, 8192);
+
+// 设置重定向，缺省为 true
+
+HttpClientParams.setRedirecting(params, true);
+
+// 设置 user agent
+
+HttpProtocolParams.setUserAgent(params, userAgent);
+
+// 创建一个 HttpClient 实例
+
+// 注意 HttpClient httpClient = new HttpClient(); 是Commons HttpClient
+
+// 中的用法，在 Android 1.5 中我们需要使用 Apache 的缺省实现 DefaultHttpClient
+
+HttpClient httpClient = new DefaultHttpClient(params);
+
+// 创建 HttpGet 方法，该方法会自动处理 URL 地址的重定向
+
+HttpGet httpGet = new HttpGet (“http://www.test_test.com/”);
+
+HttpResponse response = client.execute(httpGet);
+
+if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+
+// 错误处理，例如可以在该请求正常结束前将其中断
+
+httpGet.abort();
+
+}
+
+// 读取更多信息
+
+Header[] headers = response.getHeaders();
+
+HttpEntity entity = response.getEntity();
+
+Header header = response.getFirstHeader(“Content-Type”);
+
+} catch (Exception ee) {
+
+} finally {
+
+// 释放连接
+
+client.getConnectionManager().shutdown();
+
+}
+
+//以下例子以 HttpGet 方式通过代理访问 HTTPS 网站：
+
+try {
+
+HttpClient httpClient = new HttpClient();
+
+// 设置认证的数据
+
+httpClient.getCredentialsProvider().setCredentials(
+
+new AuthScope(“your_auth_host”, 80, “your_realm”),
+
+new UsernamePasswordCredentials(“username”, “password”));
+
+// 设置服务器地址，端口，访问协议
+
+HttpHost targetHost = new HttpHost(“www.test_test.com”, 443, “https”);
+
+// 设置代理
+
+HttpHost proxy = new HttpHost(“192.168.1.1″, 80);
+
+httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+
+// 创建一个 HttpGet 实例
+
+HttpGet httpGet = new HttpGet(“/a/b/c”);
+
+// 连接服务器并获取应答数据
+
+HttpResponse response = httpClient.execute(targetHost, httpGet);
+
+// 读取应答数据
+
+int statusCode = response.getStatusLine().getStatusCode();
+
+Header[] headers = response.getHeaders();
+
+HttpEntity entity = response.getEntity();
+
+} catch (Exception ee) {

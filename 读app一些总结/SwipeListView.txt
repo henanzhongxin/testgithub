@@ -1,0 +1,213 @@
+swipeFrontView - Required - front view id. 即ListView Item正常显示的控件Id，且必须与Item的布局文件中的控件id一样
+?swipeBackView - Required - back view id.  手指滑动时显示的，隐藏在FrontView后面，且必须与item的布局文件中控件Id一样
+?swipeActionLeft - Optional - left swipe action Default: 'reveal'  左滑的动作，默认reveal，即显示BackView，还有dismiss,choice会触发响应的方法。
+?swipeActionRight - Optional - right swipe action Default: 'reveal' 同上
+?swipeMode - Gestures to enable or 'none'. Default: 'both' 设置左滑、右滑、都支持
+?swipeCloseAllItemsWhenMoveList - Close revealed items on list motion. Default: 'true' 当滚动listview时，关闭所有展开的Item，最好不要设置为false，由于item的复用，false存在一些问题。
+?swipeOpenOnLongPress - Reveal on long press Default: 'true' 长按时触发显示
+?swipeAnimationTime - item drop animation time. Default: android configuration 动画时间长度
+?swipeOffsetLeft - left offset 左偏移量
+?swipeOffsetRight - right offset 右偏移量
+
+
+
+
+
+
+
+这里用到的是GitHub上的开源控件SwipeListView，下载地址https://github.com/47deg/android-swipelistview，下载好了之后，我们可以把下载文件当作一个库文件引用它，当然也可以直接把源代码拷贝到我们的想木当中。SwipeListView还依赖一个Github上的第三方控件，叫做NineOldAndroids,下载地址https://github.com/JakeWharton/NineOldAndroids，nineoldandroids和swipelistview一样，也是可以直接拷贝代码进来或者当作一个库文件来引用。本案例统一把他们都当作库文件来引用。
+
+这里用到的是GitHub上的开源控件SwipeListView，下载地址https://github.com/47deg/android-swipelistview，下载好了之后，我们可以把下载文件当作一个库文件引用它，当然也可以直接把源代码拷贝到我们的想木当中。SwipeListView还依赖一个Github上的第三方控件，叫做NineOldAndroids,下载地址https://github.com/JakeWharton/NineOldAndroids，nineoldandroids和swipelistview一样，也是可以直接拷贝代码进来或者当作一个库文件来引用。本案例统一把他们都当作库文件来引用。
+
+
+
+
+这里就一个swipelistview控件，我说几个不易理解的属性
+
+表示滑动时的操作，dismiss表示滑动时删除，如果设置为reveal表示滑动时会显示出item后面的选项 
+swipe:swipeActionLeft=”dismiss” 
+swipe:swipeActionRight=”reveal” 
+这个是背面布局的id（我们把直接看到的布局叫做前面的，滑动之后才能看到的布局叫做背面的），必须与背面布局id对应 
+swipe:swipeBackView=”@+id/back” 
+这个是滚动时候是否关闭背面的布局，true表示关闭，false表示不关闭，一般设置为true 
+ swipe:swipeCloseAllItemsWhenMoveList=”true” 
+这个是前面布局的id，要与布局的id对应 
+swipe:swipeFrontView=”@+id/front” 
+both表示可以向左滑也可以向右滑，right和left分别表示只能向有或者向左滑动。 
+swipe:swipeMode=”both” 
+下面两个表示向左或者向右滑动时的偏移量，一般不在xml文件中设置，而是在代码中根据设置的大小来设置偏移量。 
+swipe:swipeOffsetLeft=”0dp” 
+swipe:swipeOffsetRight=”0dp” 
+再来看看Item布局文件，这里包括前面的和后面的，两个重叠在一起：
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <!-- linearlayout中的布局是每一项后面隐藏的布局 -->
+
+    <LinearLayout
+        android:id="@+id/back"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="#eee"
+        android:tag="back" >
+
+        <Button
+            android:id="@+id/example_row_b_action_1"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:text="测试" />
+
+        <Button
+            android:id="@+id/example_row_b_action_2"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:layout_marginLeft="10dp"
+            android:layout_weight="1"
+            android:text="删除" />
+
+        <Button
+            android:id="@+id/example_row_b_action_3"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:text="编辑" />
+    </LinearLayout>
+
+    <!-- 这里是前台显示的布局 -->
+
+    <RelativeLayout
+        android:id="@+id/front"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="#ffffff"
+        android:orientation="vertical"
+        android:tag="front" >
+
+        <TextView
+            android:id="@+id/example_row_tv_title"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textSize="18sp" />
+    </RelativeLayout>
+
+</FrameLayout>
+
+这个布局是一个常规布局，我就不解释了。
+
+MainActivity.java，关键地方都有注释
+public class MainActivity extends Activity {
+    private SwipeListView mSwipeListView ;
+    private SwipeAdapter mAdapter ;
+    public static int deviceWidth ;
+    private List<String> testData ;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mSwipeListView = (SwipeListView) findViewById(R.id.example_lv_list);
+        testData = getTestData();
+        //数据适配
+        mAdapter = new SwipeAdapter(this, R.layout.package_row, testData,mSwipeListView);
+        //拿到设备宽度
+        deviceWidth = getDeviceWidth();
+        mSwipeListView.setAdapter(mAdapter);
+        //设置事件监听
+        mSwipeListView.setSwipeListViewListener( new TestBaseSwipeListViewListener());
+        reload();
+    }
+
+    private List<String> getTestData() {
+        String [] obj = new String[]{"红楼梦","西游记","水浒传","管锥编","宋诗选注","三国演义","android开发高级编程","红楼梦","西游记","水浒传","管锥编","宋诗选注","三国演义","android开发高级编程"};
+        List<String> list = new ArrayList<String>(Arrays.asList(obj));
+        return list;
+    }
+
+    private int getDeviceWidth() {
+        return getResources().getDisplayMetrics().widthPixels;
+    }
+
+    private void reload() {
+//      mSwipeListView.setSwipeMode(SwipeListView.SWIPE_MODE_LEFT);
+//      mSwipeListView.setSwipeActionLeft(SwipeListView.SWIPE_ACTION_REVEAL);
+//      mSwipeListView.setSwipeActionRight(settings.getSwipeActionRight());
+        //滑动时向左偏移量，根据设备的大小来决定偏移量的大小
+        mSwipeListView.setOffsetLeft(deviceWidth * 1 / 3);
+        mSwipeListView.setOffsetRight(deviceWidth * 1 / 3);
+//      mSwipeListView.setOffsetRight(convertDpToPixel(settings.getSwipeOffsetRight()));
+        //设置动画时间
+        mSwipeListView.setAnimationTime(30);
+        mSwipeListView.setSwipeOpenOnLongPress(false);
+    }
+
+    class TestBaseSwipeListViewListener extends BaseSwipeListViewListener{
+
+        //点击每一项的响应事件
+        @Override
+        public void onClickFrontView(int position) {
+            super.onClickFrontView(position);
+            Toast.makeText(getApplicationContext(), testData.get(position), Toast.LENGTH_SHORT).show();
+        }
+
+        //关闭事件
+        @Override
+        public void onDismiss(int[] reverseSortedPositions) {
+            for (int position : reverseSortedPositions) {
+                Log.i("lenve", "position--:"+position);
+                testData.remove(position);
+            }
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+}
+
+数据适配器：
+public class SwipeAdapter extends ArrayAdapter<String> {
+    private LayoutInflater mInflater ;
+    private List<String> objects ;
+    private SwipeListView mSwipeListView ;
+    public SwipeAdapter(Context context, int textViewResourceId,List<String> objects, SwipeListView mSwipeListView) {
+        super(context, textViewResourceId, objects);
+        this.objects = objects ;
+        this.mSwipeListView = mSwipeListView ;
+        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    }
+
+    @Override
+    public View getView(final int position, View convertView, ViewGroup parent) {
+        ViewHolder holder = null ;
+        if(convertView == null){
+            convertView = mInflater.inflate(R.layout.package_row, parent, false);
+            holder = new ViewHolder();
+            holder.mFrontText = (TextView) convertView.findViewById(R.id.example_row_tv_title);
+            holder.mBackEdit = (Button) convertView.findViewById(R.id.example_row_b_action_3);
+            holder.mBackDelete = (Button) convertView.findViewById(R.id.example_row_b_action_2);
+            convertView.setTag(holder);
+        }else{
+            holder = (ViewHolder) convertView.getTag();
+        }
+        holder.mBackDelete.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //关闭动画
+                mSwipeListView.closeAnimate(position);
+                //调用dismiss方法删除该项（这个方法在MainActivity中）
+                mSwipeListView.dismiss(position);
+            }
+        });
+        String item = getItem(position);
+        holder.mFrontText.setText(item);
+        return convertView;
+    }
+    class ViewHolder{
+        TextView mFrontText ;
+        Button mBackEdit,mBackDelete ;
+    }
+}

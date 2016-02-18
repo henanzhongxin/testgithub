@@ -1,0 +1,13 @@
+获得 LayoutInflater 实例的三种方式
+
+1.
+
+LayoutInflater inflater = getLayoutInflater();  //调用Activity的getLayoutInflater()
+
+2.
+
+LayoutInflater localinflater =(LayoutInflater)context.getSystemService (Context.LAYOUT_INFLATER_SERVICE);
+
+3.
+
+ LayoutInflater inflater = LayoutInflater.from(context);  

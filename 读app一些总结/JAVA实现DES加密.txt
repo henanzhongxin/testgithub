@@ -1,0 +1,79 @@
+JAVA实现
+
+加密
+
+     代码有详细解释，不多废话。
+
+     注意：DES加密和解密过程中，密钥长度都必须是8的倍数
+
+
+
+
+[java] view plaincopy
+01.public byte[] desCrypto(byte[] datasource, String password) {              
+02.        try{  
+03.        SecureRandom random = new SecureRandom();  
+04.        DESKeySpec desKey = new DESKeySpec(password.getBytes());  
+05.        //创建一个密匙工厂，然后用它把DESKeySpec转换成  
+06.        SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");  
+07.        SecretKey securekey = keyFactory.generateSecret(desKey);  
+08.        //Cipher对象实际完成加密操作  
+09.        Cipher cipher = Cipher.getInstance("DES");  
+10.        //用密匙初始化Cipher对象  
+11.        cipher.init(Cipher.ENCRYPT_MODE, securekey, random);  
+12.        //现在，获取数据并加密  
+13.        //正式执行加密操作  
+14.        return cipher.doFinal(datasource);  
+15.        }catch(Throwable e){  
+16.                e.printStackTrace();  
+17.        }  
+18.        return null;  
+19.}  
+ 
+解密
+
+    代码有详细注释，不多废话
+
+
+
+
+[java] view plaincopy
+01.private byte[] decrypt(byte[] src, String password) throws Exception {  
+02.        // DES算法要求有一个可信任的随机数源  
+03.        SecureRandom random = new SecureRandom();  
+04.        // 创建一个DESKeySpec对象  
+05.        DESKeySpec desKey = new DESKeySpec(password.getBytes());  
+06.        // 创建一个密匙工厂  
+07.        SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");  
+08.        // 将DESKeySpec对象转换成SecretKey对象  
+09.        SecretKey securekey = keyFactory.generateSecret(desKey);  
+10.        // Cipher对象实际完成解密操作  
+11.        Cipher cipher = Cipher.getInstance("DES");  
+12.        // 用密匙初始化Cipher对象  
+13.        cipher.init(Cipher.DECRYPT_MODE, securekey, random);  
+14.        // 真正开始解密操作  
+15.        return cipher.doFinal(src);  
+16.}  
+ 
+测试场景
+
+      例如，我们可以利用如上函数对字符串进行加密解密，也可以对文件进行加密解密，如：
+
+
+
+
+[java] view plaincopy
+01.//待加密内容  
+02.String str = "测试内容";  
+03.//密码，长度要是8的倍数  
+04.String password = "12345678";  
+05.byte[] result = DESCrypto.desCrypto(str.getBytes(),password);  
+06.System.out.println("加密后内容为："+new String(result));  
+07.  
+08.//直接将如上内容解密  
+09.try {  
+10.        byte[] decryResult = des.decrypt(result, password);  
+11.        System.out.println("加密后内容为："+new String(decryResult));  
+12.} catch (Exception e1) {  
+13.        e1.printStackTrace();  
+14.}  

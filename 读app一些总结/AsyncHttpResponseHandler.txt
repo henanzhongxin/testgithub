@@ -1,0 +1,133 @@
+浅论Android网络请求库——android-async-http - laozhu1124
+
+
+时间 2014-03-06 08:52:00  ? 博客园-原创精华区   
+
+原文  http://www.cnblogs.com/manuosex/p/3583775.html 
+
+主题 安卓开发  
+
+
+
+AsyncHttpResponseHandler ——这是一个请求返回处理  成功 失败 开始  完成  等自定义的消息的类
+
+BinaryHttpResponseHandler extends AsyncHttpResponseHandler ——继承AsyncHttpResponseHandler的子类，这是一个字节流返回处理的类， 该类用于处理图片等类。
+
+JsonHttpResponseHandler extends AsyncHttpResponseHandler ——继承AsyncHttpResponseHandler的子类，这是一个json请求返回处理服务器与客户端用json交流时使用的类.
+
+AsyncHttpRequest implements Runnable ——基于线程的子类，用于 异步请求类， 通过AsyncHttpResponseHandler回调。
+
+PersistentCookieStore implements CookieStore ——这是一个基于CookieStore的子类， 使用HttpClient处理数据，并且使用cookie持久性存储接口。
+
+ RequestParams ——封装了参数处理  例如：
+
+* RequestParams params = new RequestParams();
+* params.put("username", "james");
+* params.put("password", "123456");
+* params.put("email", "my@email.com");
+* params.put("profile_picture", new File("pic.jpg")); // Upload a File
+* params.put("profile_picture2", someInputStream); // Upload an InputStream
+* params.put("profile_picture3", new ByteArrayInputStream(someBytes)); // Upload some bytes
+*
+* AsyncHttpClient client = new AsyncHttpClient();
+
+接下来核心类。
+
+RetryHandler implements HttpRequestRetryHandler——这是一个多个线程同步处理的类
+
+SerializableCookie implements Serializable——这是操作cookie 放入/取出数据的类
+
+SimpleMultipartEntity implements HttpEntity——用于处理多个请求实体封装
+
+SyncHttpClient extends AsyncHttpClient——同步客户端请求的类
+
+AsyncHttpClient——异步客户端请求的类
+
+介绍了这些核心类之后，我们主要看看他的用法：
+
+这是普通get方式来返回相应字符串的代码：
+
+AsyncHttpClient client = new AsyncHttpClient();  
+                client.get("http://www.baidu.com", new AsyncHttpResponseHandler() {  
+                      
+                    @Override  
+                    public void onSuccess(String response) {  
+                        System.out.println(response);  
+                        textView.setText(response);  
+                    }  
+                      
+                    @Override  
+                    public void onStart() {  
+                        super.onStart();  
+                        System.out.println("onStart");  
+                    }  
+                      
+                    @Override  
+                    public void onFinish() {  
+                        super.onFinish();  
+                        System.out.println("onFinish");  
+                    }  
+                      
+                }  
+ 
+
+同时，请求方式还支持POST和PUT，请求的同时还支持参数传递，下面看看如何通过JSON字符串作为参数访问服务器： 
+
+try {  
+                    JSONObject jsonObject = new JSONObject();  
+                    jsonObject.put("username", "ryantang");  
+                    StringEntity stringEntity = new StringEntity(jsonObject.toString());  
+                    client.post(MainActivity.this, "http://api.com/login", stringEntity, "application/json", new JsonHttpResponseHandler(){  
+  
+                        @Override  
+                        public void onSuccess(JSONObject jsonObject) {  
+                            super.onSuccess(jsonObject);  
+                              
+                        }  
+                          
+                    });  
+                } catch (JSONException e) {  
+                    e.printStackTrace();  
+                } catch (UnsupportedEncodingException e) {  
+                    e.printStackTrace();  
+                }  
+
+除此之外，还能够支持相应文件图片上传的话。相应的源代码如下：
+
+String path="http://sv1.livechano.com:8080/upload.action?&action=1.6&type=1&ext=png";
+        File myFile = new File("/sdcard/test.png");
+        RequestParams params = new RequestParams();
+        try {
+
+            params.put("image", myFile,"application/octet-stream");
+            
+            AsyncHttpClient client = new AsyncHttpClient();
+            
+            client.post(path, params, new AsyncHttpResponseHandler(){
+                
+                @Override
+                public void onFailure(Throwable error, String content) {
+                    // TODO Auto-generated method stub
+                    super.onFailure(error, content);
+                    Toast.makeText(MainActivity.this, "上传失败！"+content, Toast.LENGTH_LONG).show();
+                }
+                
+                @Override
+                public void onSuccess(int statusCode, String content) {
+                    // TODO Auto-generated method stub
+                    super.onSuccess(statusCode, content);
+                    System.out
+                            .println("content:    "+content);
+                    Toast.makeText(MainActivity.this, "上传成功！"+content, Toast.LENGTH_LONG).show();
+                }
+                
+                
+            });
+            
+        } catch(FileNotFoundException e) {
+            
+        }
+
+注意了，这种方法上传的参数一定要 设置params.put("image", myFile,"application/octet-stream");否则就会失败。
+
+当然，android-async-http还有很多用法，这里不做过多赘述了。希望android-async-http能够大家以后android的请求模块得到帮助。

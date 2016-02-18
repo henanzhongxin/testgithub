@@ -1,0 +1,81 @@
+    Joda-time介绍 
+
+Joda-Time提供了一组Java类包用于处理包括ISO8601标准在内的date和time。可以利用它把JDK Date和Calendar类完全替换掉，而且仍然能够提供很好的集成。 
+
+Joda-Time主要的特点包括： 
+
+1.       易于使用:Calendar让获取"正常的"的日期变得很困难，使它没办法提供简单的方法，而Joda-Time能够 直接进行访问域并且索引值1就是代表January。 
+
+2.       易于扩展：JDK支持多日历系统是通过Calendar的子类来实现，这样就显示的非常笨重而且事实 上要实现其它日历系统是很困难的。Joda-Time支持多日历系统是通过基于Chronology类的插件体系来实现。 
+
+3.       提供一组完整的功能：它打算提供 所有关系到date-time计算的功能．Joda-Time当前支持6种日历系统，而且在将来还会继续添加。有着比JDK Calendar更好的整体性能等等。 
+ 
+2       Joda-time安装 
+
+官方网址：http://joda-time.sourceforge.net/index.html 
+
+下载地址：http://sourceforge.net/projects/joda-time/files/joda-time/2.0/ 
+
+下载包结构如下： 
+
+在项目中要使用Joda-time只要将joda-time-2.0.jar导入项目lib目录下即可。 
+ 
+3       基本功能介绍 
+ 
+3.1    DateTime 
+
+DateTime in = new DateTime(); 
+
+System.out.println(in.now());  //国际标准时间 
+
+System.out.println(in.getYear()); //当年 
+
+System.out.println(in.getMonthOfYear()); //当月 
+
+System.out.println(in.getDayOfMonth());  //当月第几天 
+
+System.out.println(in.getDayOfWeek());//本周第几天 
+
+System.out.println(in.getDayOfYear());//本年第几天 
+
+System.out.println(in.getHourOfDay());//时 
+
+System.out.println(in.getMinuteOfHour());//分 
+
+System.out.println(in.getMinuteOfDay());//当天第几分钟 
+
+System.out.println(in.getSecondOfMinute());//秒 
+
+System.out.println(in.getSecondOfDay());//当天第几秒 
+
+System.out.println(in.getWeekOfWeekyear());//本年第几周 
+
+System.out.println(in.getZone());//所在时区 
+
+System.out.println(in.dayOfWeek().getAsText()); //当天是星期几，例如：星期五 
+
+System.out.println(in.yearOfEra().isLeap()); //当你是不是闰年，返回boolean值 
+
+System.out.println(in.dayOfMonth().getMaximumValue());//当月day里面最大的值 
+ 
+3.2    更改日期格式 
+
+DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd hh:mm:ss");//自定义日期格式 
+
+in.now().toString(fmt) //使用自定义的日期格式化当期日期 
+ 
+3.3    日期比较： 
+
+DateTime in = new DateTime(); 
+
+DateTime in2 = new DateTime(in.getMillis() + 10); 
+
+in.equals(in2)  //false 
+
+in.compareTo(in2) //-1 
+
+in.isEqual(in2) //false 
+
+in.isAfter(in2) //false 
+
+in.isBefore(in2)//true 

@@ -1,0 +1,19 @@
+ 到了这里，我们就清楚了notifyDataSetChange()背后的实现机制了，在不知不觉之间Android框架帮我们干了很多事情，不过需要提醒的时，每一次notifyDataSetChange()都会引起界面的重绘。当需要修改界面上View的相关属性的时候，最后先设置完成再调用notifyDataSetChange()来重绘界面。
+
+
+OnScrollListener loadListener=new OnScrollListener() {  
+         @Override  
+         public void onScroll(AbsListView view, int firstVisibleItem,  
+           int visibleItemCount, int totalItemCount) {  
+            lastItem = firstVisibleItem + visibleItemCount;  
+         }  
+
+
+         @Override  
+         public void onScrollStateChanged(AbsListView view, intscrollState)  {  
+ //listview滚动时会执行这个方法，这儿调用加载数据的方法。         
+                adapter.notifyDataSetChanged();//提醒adapter更新  
+                uList.setSelection(lastItem - 1);//设置listview的当前位置，如果不设置每次加载完后都会返回到list的第一项。  
+             }  
+         }  
+     }; 

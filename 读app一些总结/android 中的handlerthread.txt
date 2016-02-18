@@ -1,0 +1,96 @@
+在android开发中，一说起线程的使用，很多人马上想到new Thread(){...}.start()这种方式。
+这样使用当然可以，但是多次使用这种方式，会创建多个匿名线程。使得程序运行起来越来越慢。
+因此，可以考虑使用一个Handler来启动一个线程，当该线程不再使用就删除，保证线程不会重复创建。
+一般会使用Handler handler = new Handler(){...}创建Handler。这样创建的handler是在主线程即UI线程下的Handler，
+即这个Handler是与UI线程下的默认Looper绑定的。Looper是用于实现消息队列和消息循环机制的。
+因此，如果是默认创建Handler那么如果线程是做一些耗时操作如网络获取数据等操作，这样创建Handler是不行的。
+Android API提供了HandlerThread来创建线程。官网的解释是：Handy class for starting a new thread that has a looper.
+The looper can then be used to create handler classes. Note that start() must still be called.
+HandlerThread实际上就一个Thread，只不过它比普通的Thread多了一个Looper。
+创建HandlerThread时要把它启动了，即调用start()方法。然后创建Handler时将HandlerThread中的looper对象传入。
+
+
+复制代码 代码如下:
+
+
+HandlerThread thread = new HandlerThread("MyHandlerThread");
+thread.start();
+mHandler = new Handler(thread.getLooper());
+mHandler.post(new Runnable(){...});
+
+
+
+那么这个Handler对象就是与HandlerThread这个线程绑定了（这时就不再是与UI线程绑定了，这样它处理耗时操作将不会阻塞UI）。 下面是代码说明：
+
+
+复制代码 代码如下:
+
+
+public class MainActivity extends Activity implements OnClickListener{
+private Handler mHandler;
+private HandlerThread mHandlerThread;
+
+private boolean mRunning;
+
+private Button btn;
+
+@Override
+protected void onDestroy() {
+    mRunning = false;
+    mHandler.removeCallbacks(mRunnable);
+    super.onDestroy();
+}
+
+@Override
+protected void onResume() {
+    mRunning = true;
+    super.onResume();
+}
+
+@Override
+protected void onStop() {
+    mRunning = false;
+    super.onStop();
+}
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+
+    btn = (Button) findViewById(R.id.btn);
+    btn.setOnClickListener(this);
+
+    mHandlerThread = new HandlerThread("Test", 5);
+    mHandlerThread.start();
+    mHandler = new Handler(mHandlerThread.getLooper());
+}
+
+private Runnable mRunnable = new Runnable() {
+
+    @Override
+    public void run() {
+        while (mRunning) {
+            Log.d("MainActivity", "test HandlerThread...");
+            try {
+                Thread.sleep(200);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+};
+
+@Override
+public void onClick(View v) {
+    switch(v.getId()) {
+    case R.id.btn :
+        mHandler.post(mRunnable);
+        break;
+    default :
+        break;
+    }
+
+}
+}

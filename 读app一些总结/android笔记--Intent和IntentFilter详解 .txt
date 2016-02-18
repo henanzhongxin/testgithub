@@ -1,0 +1,82 @@
+Intent用于启动Activity, Service, 以及BroadcastReceiver三种组件, 同时还是组件之间通信的重要媒介.
+
+使用Intent启动组件的优势
+1, Intent为组件的启动提供了一致的编程模型. 无论想要启动的组件是Activity, Service, 还是BroadcastReceiver, 都可以使用Intent封装启动的意图.
+2, 在某些时候, 应用程序只是想启动具有某种特征的组件, 并不想和某个特定的组件耦合. 使用Intent可以方便的达到这种高层次解耦的目的.
+
+Intent的Component属性
+Intent对象的setComponent(ComponentName comp)方法用于设置Intent的Component属性. ComponentName包含如下几个构造器:
+ComponentName(String pkg, String cls)
+ComponentName(Context pkg, String cls)
+ComponentName(Context pkg, Class<?> cls)
+由以上的构造器可知, 创建一个ComponentName对象需要指定包名和类名--这就可以唯一确定一个组件类, 这样应用程序即可根据给定的组件类去启动特定的组件. 例如:
+ComponentName comp = new ComponentName(FirstActivity.this, SecondActivity.class);
+Intent intent = new Intent();
+intent.setComponent(comp);
+以上三句代码创建了一个intent对象, 并为其指定了Component属性, 完全等价于下面的代码:
+Intent intent = new Intent(FirstActivity.this, SecondActivity.class);
+除了使用setComponent() 之外, 还可以使用setClass(), setClassName()来显式指定目标组件, 还可以调用getComponent()方法获得Intent中封装的ComponentName对象.
+当程序采用这种形式启动组件时, 在Intent中明确的指定了待启动的组件类, 此时的Intent属于显式intent, 显式Intent应用场合比较狭窄, 多用于启动本应用中的component, 因为这种方式需要提前获知目标组件类的全限定名. 而隐式Intent则通过Intent中的action, category, data属性指定目标组件需要满足的若干条件, 系统筛选出满足所有条件的component, 从中选择最合适的component或者由用户选择一个component作为目标组件启动.
+如果Intent中指定了ComponentName属性, 则Intent的其他属性将被忽略.
+
+Intent的Action属性
+action属性是一个字符串, 代表某一种特定的动作. Intent类预定义了一些action常量, 开发者也可以自定义action. 一般来说, 自定义的action应该以application的包名作为前缀, 然后附加特定的大写字符串, 例如"cn.xing.upload.action.UPLOAD_COMPLETE"就是一个命名良好的action.
+Intent类的setAction()方法用于设定action, getAction()方法可以获取Intent中封装的action.
+以下是Intent类中预定义的部分action:
+ACTION_CALL--目标组件为activity, 代表拨号动作;
+ACTION_EDIT--目标组件为activity, 代表向用户显示数据以供其编辑的动作;
+ACTION_MAIN--目标组件为activity, 表示作为task中的初始activity启动;
+ACTION_BATTERY_LOW--目标组件为broadcastReceiver, 提醒手机电量过低;
+ACTION_SCREEN_ON--目标组件为broadcast, 表示开启屏幕.
+
+Intent的Category属性
+category属性也是一个字符串, 用于指定一些目标组件需要满足的额外条件. Intent对象中可以包含任意多个category属性. Intent类也预定义了一些category常量, 开发者也可以自定义category属性.
+Intent类的addCategory()方法为Intent添加Category属性, getCategories()方法用于获取Intent中封装的所有category.
+以下是Intent类中预定义的部分category:
+CATEGORY_HOME--表示目标activity必须是一个显示home screen的activity;
+CATEGORY_LAUNCHER--表示目标activity可以作为task栈中的初始activity, 常与ACTION_MAIN配合使用;
+CATEGORY_GADGET--表示目标activity可以被作为另一个activity的一部分嵌入.
+
+Intent的Data属性
+data属性指定所操作数据的URI. data经常与action配合使用, 如果action为ACTION_EDIT, data的值应该指明被编辑文档的URI; 如果
+action为ACTION_CALL, data的值应该是一个以"tel:"开头并在其后附加号码的URI; 如果action为ACTION_VIEW, data的值应该是一个以"http: "开头并在其后附加网址的URI...
+Intent类的setData()方法用于设置data属性, setType()方法用于设置data的MIME类型, setDataAndType()方法可以同时设定两者. 可以通过getData()方法获取data属性的值, 通过getType()方法获取data的MIME类型.
+
+Intent的Extra属性
+通过Intent启动一个component时, 经常需要携带一些额外的数据过去. 携带数据需要调用Intent的putExtra()方法, 该方法存在多个重载方法, 可用于携带基本数据类型及其数组, String类型及其数组, Serializable类型及其数组, Parcelable类型及其数组, Bundle类型等. Serializable和Parcelable类型代表一个可序列化的对象
+, Bundle与Map类似,可用于存储键值对.
+
+Intent的Flag属性
+flag属性是一个int值, 用于通知android系统如何启动目标activity, 或者启动目标activity之后应该采取怎样的后续操作. 所有的flag都在Intent类中定义, 部分常用flag如下:
+FLAG_ACTIVITY_NEW_TASK--通知系统将目标activity作为一个新task的初始activity;
+FLAG_ACTIVITY_NO_HISTORY--通知系统不要将目标activity放入历史栈中;
+FLAG_FROM_BACKGROUND--通知系统这个Intent来源于后台操作, 而非用户的直接选择...
+
+IntentFilter类
+IntentFilter类表示Intent过滤器, 大部分情况下, 每一个component都会定义一个或多个IntentFilter, 用于表明其可处理的Intent. 
+一般来说, component的IntentFilter应该在AndroidManifest.xml文件中定义. 
+定义的方法: 在<activity>, <receiver>, <service>元素中增加一个或多个<intent-filter>子元素. 如:
+<!-- 声明作为程序入口的Activity -->
+<activity android:name=".FirstActivity">
+<intent-filter>
+<action android:name="android.intent.action.MAIN" />
+<category android:name="android.intent.category.LAUNCHER" />
+</intent-filter>
+</activity>
+
+IntentFilter与隐式Intent
+android系统处理隐式Intent时, 会比较Intent和IntentFilter的action, data, category属性, 如果以上3个属性全都相符的话, 则IntentFilter所属的component就可以作为目标组件的候选(存在多个符合条件的component时). 
+1. 测试action属性. intent最多只能定义1个action, 而filter可以定义1个或多个action. 
+通过action测试的条件为: filter定义了intent的action. 例如intent的action为"android.intent.action.MAIN", 则定义了"android.intent.action.MAIN"这个action的filter都能通过action测试(当然, filter还可以包含更多额外的action).
+如果filter没有定义action, 则这个filter将阻塞所有intent. 如果intent没有定义action, 那么只要filter定义了action就可以通过action测试. 
+2. 测试category属性. intent可以任意多个category, filter也可以任意个category. 通过category测试的条件为: filter定义了intent的所有category. 例如intent定义了"android.intent.category.DEFAULT"和"cn.xing.intent.category.UPLOAD"这2个category, 则定义了以上2个category属性的filter才能通过测试(当然, filter还可以包含更多额外的category).
+根据上面的规则, 如果一个intent没有定义category, 则所有filter都可以通过category测试. 但是有一种例外: 以startActivity(intent)方式启动一个activity时, 系统为会intent增加一个值为"android.intent.category.DEFAULT"的category, 这就意味着每一个期望通过category测试的activity, 都要在其filter中定义"android.intent.category.DEFAULT"(除了作为程序入口的activity).
+3. 测试data属性. intent最多只能定义1个data, filter则可以定义多个data.
+通过data测试的条件为:
+a. 如果intent没有指定data和data type, 则只有没有定义data和date type的filter才能通过测试;
+b. 如果intent定义了data没有定义data type, 则只有定义了相同data且没有定义date type的filter才能通过测试;
+c. 如果intent没有定义data却定义了data type, 则只有未定义data且定义了相同的data type的filter才能通过测试;
+d. 如果intent既定义了data也定义了data type, 则只有定义了相同的data和data type的filter才能通过测试.
+data属性是一个URI, URI中包含scheme, host, post和path, 典型的URI为:
+scheme://host:port/path
+scheme, host, post和path都是可选的. 比较2个data时, 只比较filter中包含的部分. 比如filter的一个data只是指定了scheme部分, 则测试时只是比较data的scheme部分, 只要两者的scheme部分相同, 就视为"相同的data".

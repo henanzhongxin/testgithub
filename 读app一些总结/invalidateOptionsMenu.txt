@@ -1,0 +1,106 @@
+android 细节之 menu 之 invalidateOptionsMenu2014-08-07      0 个评论     来源：yundomo的专栏   收藏    我要投稿 
+menu 在 android中是个非常常用的控件，以前自己做项目的时候通常都是将系统的menu相关方法在activity中直接删去，并且将主题换为fullscreen，然后再在layout中引入自己画好的新的标题栏。
+
+实际上有更好的方法。
+
+并不需要将系统方法删去，只需要将系统menu加上自己的图片，例如：
+
+
+
+
+
+?
+
+1
+2
+3
+4
+5
+6
+ 
+<!--?xml version="1.0" encoding="utf-8"?-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+ 
+    <item android:title="@string/common_menu_edit" android:id="@+id/menu_edit" android:showasaction="always" android:icon="@drawable/ic_edit">
+ 
+</item></menu>
+ 
+
+
+
+
+
+
+
+
+?
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+ 
+@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_card_details, menu);
+        tintMenuItems(menu);
+        return true;
+    }
+ 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.menu_edit).setEnabled(mIsCardDetailsLoaded);
+        return true;
+    }
+ 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.menu_edit:
+            Intent intent = prepareIntent(EditCardActivity.class, false);
+            intent.putExtra(IntentExtra.UNIFIED_CARD, mUnifiedCard);
+            startActivityForResult(intent, Ids.Request.EDIT_PAYMENT_CARD);
+            return true;
+ 
+        default:
+            return super.onOptionsItemSelected(item);
+        }
+    }
+ 
+
+
+ 3.2运行时改变Menu ItemonCreateOptionsMenu()只有在menu刚被创建时才会执行，因此要想随时动态改变OptionMenu就要实现onPrepareOptionsMenu()方法，该方法会传给你Menu对象，供使用
+Android2.3或更低的版本会在每次Menu打开的时候调用一次onPrepareOptionsMenu().
+ Android3.0及以上版本默认menu是打开的，所以必须调用invalidateOptionsMenu()方法，然后系统将调用onPrepareOptionsMenu()执行update操作。
+
+
+
+
+这样就可以实现我们的自定义菜单，简单方便。
+
+
+
+
+虽然我觉得自己在主layout中包裹一个layout用来做标题栏也很方便，但是最近的实际开发中，前辈们貌似都是用我刚才提到的方法来做菜单，特记之。

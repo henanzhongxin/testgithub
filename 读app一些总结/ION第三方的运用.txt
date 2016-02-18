@@ -1,0 +1,39 @@
+来源：github/ion
+Licence：Apache 2.0
+作者：Koushik Dutta
+
+
+    十分简单易用的提供各种异步网络服务类库。 
+
+    此类库基于AndroidAsync（http://a.code4app.com/android/Android-Async/5238175e6803faa15f000002） 
+
+    具体功能包括： 
+
+    1. 异步下载： 
+
+     （1）下载图片 (用ImageViews 或者 Bitmaps显示)； 
+
+     （2）下载JSON文件 (通过Gson解析)； 
+
+     （3）下载字符串； 
+
+     （4）下载文件； 
+
+    2. Fluent API； 
+
+    3. 当呼叫活动（calling Activity）结束时，可以自动取消网络操作。4. 4. 所有的操作都返回一个Future（http://en.wikipedia.org/wiki/Futures_and_promises），并且可以取消； 
+
+    5. HTTP POST/PUT； 
+
+    6. 缓存； 
+
+    7. Gzip/Deflate 压缩 
+
+    8. 当有多个IP地址时，自动选择最好最稳定的服务器连接； 
+
+    9. 支持Cookies 
+
+     等等。
+
+
+http://www.okbase.net/file/item/27762

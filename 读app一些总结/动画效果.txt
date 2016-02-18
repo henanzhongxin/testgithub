@@ -1,0 +1,48 @@
+Views动画
+ 属性动画系统运行为对象的动画进行简化处理，对比视图动画系统它提供了一些优点。视图动画系统通过改变View的绘制方式来变换View对象。这是在View的容器中对各个View进行处理的，因为View本身没有功能来控制。这也导致了为View设置了动画，但是View对象本身却没有改变。这也导致了View对象的一些行为，例如位置，仍然在它动画前的位置，即使它被绘制在了屏幕上的另外一个地方。在Android3.0中，新的属性以及它对应的set和get方法都被添加了，这可以用来消除这种缺点.
+属性动画系统可以通过改变屏幕上View对象的实际属性值来为View对象设置动画。除此之外，View对象自己也会在自己属性值改变的时候自动的调用invalidate()函数来刷新屏幕。View类中为了方便属性系统的新属性 都有：
+translationX and translationY:这两个属性控制View的位置，他们的值是相对于View的容器的左上角坐标的一个偏移。
+rotation, rotationX, and rotationY:这几个属性控制在2D或者3D中相对于轴心旋转。
+x and y:这是两个简单实用的值，他们最终控制View在它容器中的位置，也就是左上角坐标加上translationX 和translationY的值。
+alpha:控制View对象的alpha透明度值。默认我1代表不透明。0代表完全透明，不可见.
+要为View对象的某个属性设置动画，例如颜色或者旋转属性。你所要做的就是创建一个属性动画并且描叙你要设置动画的属性值。例如：
+ObjectAnimator.ofFloat(myView, "rotation", 0f, 360f);
+要获取更多关于创建动画的信息，你可以参考 ValueAnimator and ObjectAnimator章节。
+ 用ViewPropertyAnimator设置动画
+
+ViewPropertyAnimator提供了一种简单的方式来为View的部分属性设置动画，使用一个单一的Animator对象。它表现的更像 ObjectAnimator，因为他也要修改View对象的相应的属性值，但是当为多个属性同时设置动画时，它比 ObjectAnimator更高效，下面的代码片段显示了使用多个ObjectAnimator，单个ObjectAnimator，以及ViewPropertyAnimator来同时为View的x,y属性设置动画的情形：
+
+Multiple ObjectAnimator objects
+
+
+
+
+
+[java] view plaincopyprint?在CODE上查看代码片派生到我的代码片
+01.ObjectAnimator animX = ObjectAnimator.ofFloat(myView, "x", 50f);  
+02.ObjectAnimator animY = ObjectAnimator.ofFloat(myView, "y", 100f);  
+03.AnimatorSet animSetXY = new AnimatorSet();  
+04.animSetXY.playTogether(animX, animY);  
+05.animSetXY.start();  
+
+
+
+ One ObjectAnimator
+
+
+
+[java] view plaincopyprint?在CODE上查看代码片派生到我的代码片
+01.PropertyValuesHolder pvhX = PropertyValuesHolder.ofFloat("x", 50f);  
+02.PropertyValuesHolder pvhY = PropertyValuesHolder.ofFloat("y", 100f);  
+03.ObjectAnimator.ofPropertyValuesHolder(myView, pvhX, pvyY).start();  
+
+
+
+ ViewPropertyAnimator
+
+
+
+[java] view plaincopyprint?在CODE上查看代码片派生到我的代码片
+01.myView.animate().x(50f).y(100f);  
+
+要获取更多有关ViewPropertyAnimator的信息，可以查看相关Android

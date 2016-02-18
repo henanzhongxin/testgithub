@@ -1,0 +1,200 @@
+接着研究，在实际项目中我们我们其实经常看到上面（或者下面）是一个类似于tab标签的东西，下面是真正的内容区域，点击不同标签内容区域会显示不同的内容，以前用过一个TabHost的组件，现在貌似过时了，大概是因为有了fragment，被FragmentTabHost取代了。闲言少叙，先看一下官方文档的描述，了解一个类的用法，看官方文档，是最快和最准确的 
+
+原来这个家伙来自于android.support.v4.app这个包下，继承自 TabHost ，并且实现了 TabHost.OnTabChangeListener 接口。文档上也直接放了两个例子。一个是在Activity下包含多个fragment，注意这个activity是v4包下的 FragmentActivity， 
+public class FragmentTabs extends FragmentActivity {
+    private FragmentTabHost mTabHost;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+  super.onCreate(savedInstanceState);
+
+  setContentView(R.layout.fragment_tabs);
+  mTabHost = (FragmentTabHost)findViewById(android.R.id.tabhost);
+  mTabHost.setup(this, getSupportFragmentManager(), R.id.realtabcontent);
+
+  mTabHost.addTab(mTabHost.newTabSpec("simple").setIndicator("Simple"),
+    FragmentStackSupport.CountingFragment.class, null);
+  mTabHost.addTab(mTabHost.newTabSpec("contacts").setIndicator("Contacts"),
+    LoaderCursorSupport.CursorLoaderListFragment.class, null);
+  mTabHost.addTab(mTabHost.newTabSpec("custom").setIndicator("Custom"),
+    LoaderCustomSupport.AppListFragment.class, null);
+  mTabHost.addTab(mTabHost.newTabSpec("throttle").setIndicator("Throttle"),
+    LoaderThrottleSupport.ThrottledLoaderListFragment.class, null);
+    }
+}
+还有就是在fragment内部包含fragment的时候也可以使用FragmentTabHost。官方给出的栗子如下： public class FragmentTabsFragmentSupport extends Fragment {
+    private FragmentTabHost mTabHost;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+      Bundle savedInstanceState) {
+  mTabHost = new FragmentTabHost(getActivity());
+  mTabHost.setup(getActivity(), getChildFragmentManager(), R.id.fragment1);
+
+  mTabHost.addTab(mTabHost.newTabSpec("simple").setIndicator("Simple"),
+    FragmentStackSupport.CountingFragment.class, null);
+  mTabHost.addTab(mTabHost.newTabSpec("contacts").setIndicator("Contacts"),
+    LoaderCursorSupport.CursorLoaderListFragment.class, null);
+  mTabHost.addTab(mTabHost.newTabSpec("custom").setIndicator("Custom"),
+    LoaderCustomSupport.AppListFragment.class, null);
+  mTabHost.addTab(mTabHost.newTabSpec("throttle").setIndicator("Throttle"),
+    LoaderThrottleSupport.ThrottledLoaderListFragment.class, null);
+
+  return mTabHost;
+    }
+
+    @Override
+    public void onDestroyView() {
+  super.onDestroyView();
+  mTabHost = null;
+    }
+注意这个fragment必须是v4包下的fragment。 
+tabhost的XML布局文件如下：  
+<android.support.v4.app.FragmentTabHost
+    android:id="@android:id/tabhost"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/line" >
+
+    <TabWidget
+      android:id="@android:id/tabs"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal" >
+    </TabWidget>
+  </android.support.v4.app.FragmentTabHost>
+
+  <RelativeLayout
+    android:id="@+id/fragment_multi"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_below="@android:id/tabhost"
+    android:background="#FFFFFF" />
+注意： FragmentTabHost是v4包下的类，一定要写全包名和类名。 
+写完了布局文件，接着研究java代码，   
+mTabHost = (FragmentTabHost)findViewById(android.R.id.tabhost);
+先把tabhost找到，也可以把context传进去直接new出来。 
+mTabHost.setup(this, getSupportFragmentManager(), R.id.realtabcontent);
+对tabhost做初始化的操作，但是在activity和在fragment里面这两句代码是不一样的，fragment的FragmentManager一定要写成 getChildFragmentManager()，说明是他子fragment的manager。 mTabHost.addTab(mTabHost.newTabSpec("simple").setIndicator("Simple"),
+                FragmentStackSupport.CountingFragment.class, null);
+
+然后添加4个Tab，其中   mTabHost.newTabSpec("simple")这个simple是该Tab的tag， setIndicator("Simple")是标签显示的label，有三个重载方法， 
+
+setIndicator(CharSequence label)； 
+
+setIndicator(CharSequence label, Drawable icon)； 
+
+setIndicator(View view) 
+
+从参数名字就可以看出来，就不多做解释，其中一和二是系统提供的布局，第三种可以自定义自己想要的view。 
+FragmentStackSupport.CountingFragment.class
+是要添加的fragment字节码，最后一个参数是一个bundle类型的tag。 
+ 其实到这个地方已经大功告成。我们不需要add，replace等等一切对fragment的操作，FragmentTabHost非常强大，他会对所添加的fragment进行管理，保存栈信息和恢复栈信息等一切操作，比如我的fragment内部有三个子fragment，我退出该fragment的时候开启的是第二个子fragment，下次我再进入该fragment的时候依然会开启第二个子fragment，且看 FragmentTabHost源码中对保存，和恢复的操作：  
+@Override
+  protected Parcelable onSaveInstanceState() {
+    Parcelable superState = super.onSaveInstanceState();
+    SavedState ss = new SavedState(superState);
+    ss.curTab = getCurrentTabTag();
+    return ss;
+  }
+
+  @Override
+  protected void onRestoreInstanceState(Parcelable state) {
+    SavedState ss = (SavedState)state;
+    super.onRestoreInstanceState(ss.getSuperState());
+    setCurrentTabByTag(ss.curTab);
+  }
+在该fragment退出的时候会自动执行 onSaveInstanceState()方法，把当前打开的fragment的TabTag通过 Parcelable的方式 记录下来，然后当再次进入到该fragment的时候会自动执行OnRestoreInstanceState(Parcelable state)方法，把之前保存的状态恢复，打开记录的TabTag对应的fragment 
+通过代码实际检验，即使退出的时候是打开的第二个fragment，但是再次进来的时候也会执行一遍第一个fragment的生命周期方法，主要是因为tabhost要有一个默认的打开界面。且看他的addTab方法 
+public void addTab(TabHost.TabSpec tabSpec, Class<?> clss, Bundle args) {
+    tabSpec.setContent(new DummyTabFactory(mContext));
+    String tag = tabSpec.getTag();
+
+    TabInfo info = new TabInfo(tag, clss, args);
+
+    if (mAttached) {
+      // If we are already attached to the window, then check to make
+      // sure this tab's fragment is inactive if it exists.  This shouldn't
+      // normally happen.
+      info.fragment = mFragmentManager.findFragmentByTag(tag);
+      if (info.fragment != null && !info.fragment.isDetached()) {
+        FragmentTransaction ft = mFragmentManager.beginTransaction();
+        ft.detach(info.fragment);
+        ft.commit();
+      }
+    }
+
+    mTabs.add(info);
+    addTab(tabSpec);
+  }
+最后一句是addTab(tabSpec)，这是他的父类TabHost的方法，跟踪一下addTab方法，发现他有这样一句代码： if (mCurrentTab == -1) {
+            setCurrentTab(0);
+        }
+也就是当前没有Tab的时候，会指定第0个元素为当前的Tab。所以会执行他的生命周期方法。 
+ 另外FragmentTabHost还有一个重要的方法就是 setOnTabChangedListener  ( TabHost.OnTabChangeListener  l)  
+
+就是当页面发生变化的时候，设置回调监听接口，这个接口只有一个方法 public void onTabChanged(String tabId)，其实参数就是Tab的Tag。    
+
+各位看官，其实这是一个很有用的方法，比如你在给你自定义的Tab设置背景的时候，这个就可以派上用途了。   
+
+最后，我们在项目中其实是有一个个性化的需求的，比如说我想直接跳到fragment的第三个子fragment而不是按之间栈里保存的状态，经过研究   
+
+有一个比较笨的方法，希望大家批评指正并提出更好的解决方案。   
+
+写一个自己的类并继承FragmentTabHost：   
+package com.example.myfragment;
+
+import android.content.Context;
+import android.os.Parcelable;
+import android.support.v4.app.FragmentTabHost;
+import android.util.AttributeSet;
+
+public class MyTabHost extends FragmentTabHost {
+
+  public MyTabHost(Context context) {
+    super(context);
+  }
+
+  public MyTabHost(Context context, AttributeSet attrs) {
+    super(context, attrs);
+  }
+
+  String tag = null;
+
+  public void setTag(String tag) {
+    this.tag = tag;
+  }
+
+  public String getTag() {
+    return tag;
+  }
+
+  @Override
+  protected void onRestoreInstanceState(Parcelable state) {
+    super.onRestoreInstanceState(state);
+    if (tag != null)
+      setCurrentTabByTag(tag);
+  }
+
+  @Override
+  protected void onAttachedToWindow() {
+    super.onAttachedToWindow();
+    if (tag != null) {
+      onTabChanged("alwaysContact");
+      setCurrentTabByTag("alwaysContact");
+    }
+  }
+}
+当你想跳到fragment下的哪个子标签的时候，在代码中调用setTag方法，即可。如： public static Fragment3 getInstance(Bundle bundle) {
+    Fragment3 instance = new Fragment3();
+    arg = bundle;
+    if (bundle != null)
+      instance.setArguments(bundle);
+    return instance;
+  }
+View v = inflater.inflate(R.layout.fragment3, container, false);
+    tabhost = (FragmentTabHost) v.findViewById(android.R.id.tabhost);
+    if (arg != null) {
+      tabhost.setTag(arg.getString("currentTag"));
+    }
+齐活。 

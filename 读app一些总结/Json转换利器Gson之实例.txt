@@ -1,0 +1,148 @@
+实体类:
+备注 可以实现json  对象与字符串之间的转换
+
+[java] view plaincopy
+01.  
+
+
+
+
+[java] view plaincopy
+01.public class Student {  
+02.    private int id;  
+03.    private String name;  
+04.    private Date birthDay;  
+05.  
+06.    public int getId() {  
+07.        return id;  
+08.    }  
+09.  
+10.    public void setId(int id) {  
+11.        this.id = id;  
+12.    }  
+13.  
+14.    public String getName() {  
+15.        return name;  
+16.    }  
+17.  
+18.    public void setName(String name) {  
+19.        this.name = name;  
+20.    }  
+21.  
+22.    public Date getBirthDay() {  
+23.        return birthDay;  
+24.    }  
+25.  
+26.    public void setBirthDay(Date birthDay) {  
+27.        this.birthDay = birthDay;  
+28.    }  
+29.  
+30.    @Override  
+31.    public String toString() {  
+32.        return "Student [birthDay=" + birthDay + ", id=" + id + ", name="  
+33.                + name + "]";  
+34.    }  
+35.  
+36.}  
+
+
+测试类: 
+
+
+
+
+
+[html] view plaincopy
+01.import java.util.ArrayList;  
+02.import java.util.Date;  
+03.import java.util.List;  
+04.  
+05.import com.google.gson.Gson;  
+06.import com.google.gson.reflect.TypeToken;  
+07.  
+08.public class GsonTest1 {  
+09.  
+10.    public static void main(String[] args) {  
+11.        Gson gson = new Gson();  
+12.  
+13.        Student student1 = new Student();  
+14.        student1.setId(1);  
+15.        student1.setName("李坤");  
+16.        student1.setBirthDay(new Date());  
+17.  
+18.        // //////////////////////////////////////////////////////////  
+19.        System.out.println("----------简单对象之间的转化-------------");  
+20.        // 简单的bean转为json  
+21.        String s1 = gson.toJson(student1);  
+22.        System.out.println("简单Bean转化为Json===" + s1);  
+23.  
+24.        // json转为简单Bean  
+25.        Student student = gson.fromJson(s1, Student.class);  
+26.        System.out.println("Json转为简单Bean===" + student);  
+27.        // 结果:  
+28.        // 简单Bean转化为Json==={"id":1,"name":"李坤","birthDay":"Jun 22, 2012 8:27:52 AM"}  
+29.        // Json转为简单Bean===Student [birthDay=Fri Jun 22 08:27:52 CST 2012, id=1,  
+30.        // name=李坤]  
+31.        // //////////////////////////////////////////////////////////  
+32.  
+33.        Student student2 = new Student();  
+34.        student2.setId(2);  
+35.        student2.setName("曹贵生");  
+36.        student2.setBirthDay(new Date());  
+37.  
+38.        Student student3 = new Student();  
+39.        student3.setId(3);  
+40.        student3.setName("柳波");  
+41.        student3.setBirthDay(new Date());  
+42.  
+43.        List<Student> list = new ArrayList<Student>();  
+44.        list.add(student1);  
+45.        list.add(student2);  
+46.        list.add(student3);  
+47.  
+48.        System.out.println("----------带泛型的List之间的转化-------------");  
+49.        // 带泛型的list转化为json  
+50.        String s2 = gson.toJson(list);  
+51.        System.out.println("带泛型的list转化为json==" + s2);  
+52.  
+53.        // json转为带泛型的list  
+54.        List<Student> retList = gson.fromJson(s2,  
+55.                new TypeToken<List<Student>>() {  
+56.                }.getType());  
+57.        for (Student stu : retList) {  
+58.            System.out.println(stu);  
+59.        }  
+60.  
+61.        // 结果:  
+62.        // 带泛型的list转化为json==[{"id":1,"name":"李坤","birthDay":"Jun 22, 2012 8:28:52 AM"},{"id":2,"name":"曹贵生","birthDay":"Jun 22, 2012 8:28:52 AM"},{"id":3,"name":"柳波","birthDay":"Jun 22, 2012 8:28:52 AM"}]  
+63.        // Student [birthDay=Fri Jun 22 08:28:52 CST 2012, id=1, name=李坤]  
+64.        // Student [birthDay=Fri Jun 22 08:28:52 CST 2012, id=2, name=曹贵生]  
+65.        // Student [birthDay=Fri Jun 22 08:28:52 CST 2012, id=3, name=柳波]  
+66.  
+67.    }  
+68.}  
+
+
+执行结果: 
+
+
+
+
+
+[plain] view plaincopy
+01.----------简单对象之间的转化-------------  
+02.简单Bean转化为Json==={"id":1,"name":"李坤","birthDay":"Jun 22, 2012 9:10:31 PM"}  
+03.Json转为简单Bean===Student [birthDay=Fri Jun 22 21:10:31 CST 2012, id=1, name=李坤]  
+04.----------带泛型的List之间的转化-------------  
+05.带泛型的list转化为json==[{"id":1,"name":"李坤","birthDay":"Jun 22, 2012 9:10:31 PM"},{"id":2,"name":"曹贵生","birthDay":"Jun 22, 2012 9:10:31 PM"},{"id":3,"name":"柳波","birthDay":"Jun 22, 2012 9:10:31 PM"}]  
+06.Student [birthDay=Fri Jun 22 21:10:31 CST 2012, id=1, name=李坤]  
+07.Student [birthDay=Fri Jun 22 21:10:31 CST 2012, id=2, name=曹贵生]  
+08.Student [birthDay=Fri Jun 22 21:10:31 CST 2012, id=3, name=柳波]  
+
+
+Json转换利器Gson之实例一-简单对象转化和带泛型的List转化 (http://blog.csdn.net/lk_blog/article/details/7685169)
+ Json转换利器Gson之实例二-Gson注解和GsonBuilder (http://blog.csdn.net/lk_blog/article/details/7685190)
+ Json转换利器Gson之实例三-Map处理(上) (http://blog.csdn.net/lk_blog/article/details/7685210)
+ Json转换利器Gson之实例四-Map处理(下) (http://blog.csdn.net/lk_blog/article/details/7685224)
+ Json转换利器Gson之实例五-实际开发中的特殊需求处理 (http://blog.csdn.net/lk_blog/article/details/7685237)
+ Json转换利器Gson之实例六-注册TypeAdapter及处理Enum类型 (http://blog.csdn.net/lk_blog/article/details/7685347)
